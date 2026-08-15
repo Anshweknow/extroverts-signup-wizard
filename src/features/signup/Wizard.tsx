@@ -7,12 +7,13 @@ import { Button } from '../../components/Button';
 import { Select, TextArea, TextInput } from '../../components/Field';
 import { locationData, states } from '../../data/locations';
 import { useSignup } from './SignupContext';
-import { campusSchema, completeProfileSchema, identitySchema, reviewSchema, vibeSchema } from './validation';
+import { campusSchema, completeProfileSchema, identitySchema, reviewSchema, vibeSchema, type ReviewFormValues, type ReviewSubmitValues } from './validation';
 
 const interests = ['House parties', 'Live music', 'Brunch', 'Study breaks', 'Sports', 'Art nights', 'Networking', 'Dancing'];
 const vibes = ['High-energy parties', 'Small-group hangs', 'Creative events', 'Wellness socials'];
 const visibilities = ['Campus only', 'Friends of friends', 'Public event hosts'];
 const delay = (ms = 550) => new Promise((resolve) => window.setTimeout(resolve, ms));
+const hasOption = (options: readonly string[], value: string) => options.includes(value);
 
 export function Wizard() {
   const { step } = useSignup();
@@ -79,8 +80,8 @@ function Campus() {
       if (currentCollege) form.setValue('college', '', { shouldDirty: true, shouldValidate: true });
       return;
     }
-    if (currentCity && !available.cities.includes(currentCity)) form.setValue('city', '', { shouldDirty: true, shouldValidate: true });
-    if (currentCollege && !available.colleges.includes(currentCollege)) form.setValue('college', '', { shouldDirty: true, shouldValidate: true });
+    if (currentCity && !hasOption(available.cities, currentCity)) form.setValue('city', '', { shouldDirty: true, shouldValidate: true });
+    if (currentCollege && !hasOption(available.colleges, currentCollege)) form.setValue('college', '', { shouldDirty: true, shouldValidate: true });
   }, [available, form]);
 
   return (
@@ -143,7 +144,11 @@ function Vibe() {
 
 function Review() {
   const { data, update, setStep, setStage } = useSignup();
-  const form = useForm({ resolver: zodResolver(reviewSchema), mode: 'onChange', defaultValues: data });
+  const form = useForm<ReviewFormValues, unknown, ReviewSubmitValues>({
+    resolver: zodResolver(reviewSchema),
+    mode: 'onChange',
+    defaultValues: { agreements: data.agreements },
+  });
 
   return (
     <Card title="Confirm and enter" eyebrow="Step 4 of 4" copy="Review your details before completing the frontend-only signup demo.">

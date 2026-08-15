@@ -37,6 +37,8 @@ export const identitySchema = z.object({
   bio: trimReq('Bio', 160),
 });
 
+const hasOption = (options: readonly string[], value: string) => options.includes(value);
+
 export const campusSchema = z
   .object({
     state: trimReq('State'),
@@ -55,11 +57,11 @@ export const campusSchema = z
       return;
     }
 
-    if (!location.cities.includes(data.city)) {
+    if (!hasOption(location.cities, data.city)) {
       ctx.addIssue({ code: 'custom', path: ['city'], message: 'Choose a city available for the selected state.' });
     }
 
-    if (!location.colleges.includes(data.college)) {
+    if (!hasOption(location.colleges, data.college)) {
       ctx.addIssue({ code: 'custom', path: ['college'], message: 'Choose a college available for the selected state.' });
     }
   });
@@ -71,7 +73,12 @@ export const vibeSchema = z.object({
 });
 
 export const reviewSchema = z.object({
-  agreements: z.literal(true, { error: 'You must accept the community pledge to complete signup.' }),
+  agreements: z.boolean().refine((value): value is true => value, {
+    message: 'You must accept the community pledge to complete signup.',
+  }),
 });
+
+export type ReviewFormValues = z.input<typeof reviewSchema>;
+export type ReviewSubmitValues = z.output<typeof reviewSchema>;
 
 export const completeProfileSchema = identitySchema.and(campusSchema).and(vibeSchema).and(reviewSchema);
