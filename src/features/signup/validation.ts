@@ -1,0 +1,10 @@
+import { z } from 'zod';
+import { locationData } from '../../data/locations';
+const trimReq = (label: string, max = 80) => z.string().trim().min(1, `${label} is required.`).max(max, `${label} must be ${max} characters or fewer.`);
+const numeric = (label: string, len?: number) => z.string().regex(/^\d+$/, `${label} must use numbers only.`).refine((v) => !len || v.length === len, `${label} must be ${len} digits.`);
+export const emailSchema = z.object({ email: z.string().trim().min(1, 'Email is required.').email('Enter a valid email address.').max(120, 'Email must be 120 characters or fewer.') });
+export const otpSchema = z.object({ otp: numeric('Verification code', 6) });
+export const identitySchema = z.object({ firstName: trimReq('First name', 40), lastName: trimReq('Last name', 40), age: numeric('Age').refine((v) => Number(v) >= 18, 'You must be at least 18 to join Extroverts.').refine((v) => Number(v) <= 99, 'Enter a realistic age.'), pronouns: trimReq('Pronouns', 30), bio: trimReq('Bio', 160) });
+export const campusSchema = z.object({ state: trimReq('State'), city: trimReq('City'), college: trimReq('College'), graduationYear: numeric('Graduation year', 4).refine((v) => Number(v) >= 2026 && Number(v) <= 2035, 'Graduation year must be between 2026 and 2035.') }).superRefine((d, ctx) => { const l = locationData[d.state as keyof typeof locationData]; if (!l) return; if (!l.cities.includes(d.city)) ctx.addIssue({ code: 'custom', path: ['city'], message: 'Choose a city available for the selected state.' }); if (!l.colleges.includes(d.college)) ctx.addIssue({ code: 'custom', path: ['college'], message: 'Choose a college available for the selected state.' }); });
+export const vibeSchema = z.object({ interests: z.array(z.string()).min(2, 'Pick at least two interests.').max(5, 'Pick no more than five interests.'), eventVibe: trimReq('Event vibe'), visibility: trimReq('Visibility') });
+export const reviewSchema = z.object({ agreements: z.literal(true, { error: 'You must accept the community pledge.' }) });

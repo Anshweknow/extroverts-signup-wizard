@@ -1,0 +1,2 @@
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
+export function Button({ children, loading = false, variant = 'primary', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { loading?: boolean; variant?: 'primary' | 'secondary' | 'ghost'; children: ReactNode }) { return <button className={`btn btn--${variant}`} disabled={props.disabled || loading} aria-busy={loading} {...props}>{loading && <span className="spinner" aria-hidden="true" />}{children}</button>; }
